@@ -382,15 +382,16 @@ int connman() {
 			if (ev.type == ButtonPress) {
 				XButtonEvent* xbv = (XButtonEvent*) &ev;
 				if (xbv->button == 1 && connman_click[0]) {
-					// use a double fork to avoid creating a zombie process
+					// use a double fork to creating a zombie process
 					pid_t pid1;
 					pid_t pid2;
+					int status;
 					if ( (pid1 = fork()) < 0 )
 						fprintf (stderr, "Couldn't fork the a child process to execute %s\n", connman_click[0]);
 					else {
 						if (pid1 > 0)
-							waitpid(pid1);						// parent process, wait for child to exit
-						else {											// child process, try to fork again
+							waitpid(pid1, &status, NULL);	// parent process, wait for child to exit
+						else {													// child process, try to fork again
 							if ( (pid2 = fork()) < 0 )
 								fprintf (stderr, "Couldn't fork the grandchild to execute %s\n", connman_click[0]);
 							else {
