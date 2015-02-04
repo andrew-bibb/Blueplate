@@ -40,6 +40,8 @@ enum {
 	
 };	// enum
 
+
+
 // Variables
 static Window bars;
 GC gc_undefined, gc_offline, gc_idle, gc_ready, gc_online;
@@ -54,6 +56,8 @@ const char *rule = "eavesdrop=true,type='signal',interface='net.connman.Manager'
 // Function to draw a single bar
 static int draw_bar (int start, GC* gc, int type)
 {
+	const short bar_height = 3 * bar_width + 2 * bar_gap;
+	
 	switch (type) {
 		case Hollow: 
 			XDrawRectangle(dpy, bars, *gc, start * (bar_width + bar_gap), 0, bar_width - 1, bar_height - 1);

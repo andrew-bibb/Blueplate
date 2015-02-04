@@ -33,9 +33,16 @@ static const char mail_icon_data[] = {
 #endif /* module_mail */
 
 #ifdef module_connman
+// The width and gap are used to calculate a bar height and hence
+// the icon size (since it must be square).  The formula is:
+// 3 * bar_width + 2 * bar_gap.
+//
+// A bar_width = 3 and bar_gap = 2 results in a 13x13 icon
+// A bar_width = 4 and bar_gap = 2 results in a 16x16 icon
+// A bar width = 4 and bar_gap = 3 results in a 18x18 icon
+// You are not limited to these values, they are only provided for example.
 static const short bar_width = 3;		// width of the rectangle (px)
 static const short bar_gap = 2;			// gap between rectangles (px)
-static const short bar_height = 13;	// height of the rectangles (px)
 
 static const unsigned long conn_undefined		= 0x94BBD1;
 static const unsigned long conn_offline		= 0xE81414;
