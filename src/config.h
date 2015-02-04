@@ -33,6 +33,10 @@ static const char mail_icon_data[] = {
 #endif /* module_mail */
 
 #ifdef module_connman
+static const short bar_width = 3;		// width of the rectangle (px)
+static const short bar_gap = 2;			// gap between rectangles (px)
+static const short bar_height = 13;	// height of the rectangles (px)
+
 static const unsigned long conn_undefined		= 0x94BBD1;
 static const unsigned long conn_offline		= 0xE81414;
 static const unsigned long conn_idle			= 0xE0E00E;
