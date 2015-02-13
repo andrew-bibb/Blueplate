@@ -2,6 +2,7 @@
 PROG     =  blueplate
 MODULES  ?= desktop mail
 MODULES  += connman
+MODULES  += battery
 VER      =  0.1
 CC       ?= gcc
 MODDEFS  =  $(foreach mod, ${MODULES}, -Dmodule_${mod})
