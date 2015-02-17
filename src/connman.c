@@ -6,18 +6,8 @@
 \**********************************************************************/
 
 /*
- *  Suggested improvements (from J. McClure AKA "Trilby"): (see connman_new.c)
- *
- *  1. Replace the nonblocking read with dbus_connection_read_write_dispatch or
- *     similar function to avoid the "sleep-loop" syndrome. (done ajb, 31 jan 15)
- *  2. Remove the pthread dependence by using DBusWatch and a select loop.(done ajb 31 Jan 15)
- *  3. Use array for gcs and color configs.  Initialization can then be done in
- *     a loop through all possible conditionals allowing easier additions in the
- *     future.
- *  4. Consider drawing to pixmap and setting as window background rather than
- *     drawing directly to the window.  This way the expose event can be ignored
- *     as backingstore is already set.
- *  5. Clean up main loop (done: Trilby, 19 Jan 2015)
+ *  This is at variance with the master branch as follows:
+ * 	cmst branch uses poll() in lieu of select.
  */
 
 #include "blueplate.h"
@@ -25,6 +15,7 @@
 
 #include <dbus/dbus.h>
 #include <stdbool.h>
+#include <poll.h>
 
 enum {
 	// how to draw the rectangles
@@ -317,8 +308,8 @@ int connman() {
 	embed_window(bars);
 	fd_set fds;
 	int xfd = ConnectionNumber(dpy);	// file descriptor for xlib
-	int nfd;													// number of file descriptors
 	int ret;													// return value
+	struct pollfd pfd[2];							// poll fd structure
 	
 	// initialise the dbus errors
 	dbus_error_init(&err);
@@ -351,31 +342,30 @@ int connman() {
 		fprintf (stderr, "Couldn't add filter\n");
 		exit (3);
 	}
-		
+	
+	// Poll structures 
+	pfd[0].fd = xfd;
+	pfd[0].events = POLLIN;
+	if (wfd) {
+		pfd[1].fd = wfd;
+		pfd[1].events = POLLIN;
+	}
 	// Get the current connection state
 	getState();	
 		
 	// Main loop
-	while (running) {
-		// Initialize the file descriptor set, must be done after every select()
-		FD_ZERO(&fds);
-		FD_SET(xfd, &fds);
-		if (wfd) FD_SET(wfd, &fds);
-		nfd = (wfd > xfd ? wfd : xfd) + 1;
+	while (running && poll(pfd, sizeof(pfd) / sizeof(pfd[0]), -1) ) {
 		redraw();
 		
-		// select() blocks until one of the file descriptors needs attention
-		ret = select(nfd, &fds, 0, 0, NULL);
-		
 		// if dbus watch needs attention
-		if (wfd && FD_ISSET(wfd, &fds)) {
+		if (pfd[1].revents & POLLIN) {
 			dbus_watch_handle(w, DBUS_WATCH_READABLE);
 			while (dbus_connection_dispatch(conn) != DBUS_DISPATCH_COMPLETE) { 
 			}	// while dispatch not complete
 		}	// if wfd
 		
 		// if xevents need attention
-		if (FD_ISSET(xfd, &fds)) while (XPending(dpy)) {
+		if (pfd[0].revents & POLLIN) while (XPending(dpy)) {
 			XNextEvent(dpy, &ev);
 			// left button open connman_click[0], any other button close
 			if (ev.type == ButtonPress) {

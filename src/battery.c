@@ -1,6 +1,6 @@
 /**********************************************************************\
 * BATTERY.C - module for BLUEPLATE
-*
+r*
 * Author: Andrew Bibb, copyright 2014-2015
 * License: GPLv3
 \**********************************************************************/
@@ -170,8 +170,13 @@ int battery() {
 	
 	// Add inotify watches
 	fd = inotify_init();
-	for (i = 0; bat[i].battpath; ++i)
-		inotify_add_watch(fd, bat[i].battpath, INOTIFY_FLAGS);
+	for (i = 0; bat[i].battpath; ++i) {
+		char* uevt = malloc(strlen(bat[i].battpath) + 8);
+		strcpy(uevt, bat[i].battpath);
+		strcat(uevt, "/uevent");
+		inotify_add_watch(fd, uevt, INOTIFY_FLAGS);
+		free(uevt);
+	}
 	rescan();
 	
 	// Poll structures 
