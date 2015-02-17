@@ -308,8 +308,7 @@ int connman() {
 	embed_window(bars);
 	fd_set fds;
 	int xfd = ConnectionNumber(dpy);	// file descriptor for xlib
-	int ret;													// return value
-	struct pollfd pfd[2];							// poll fd structure
+	struct pollfd pfd[2];						// poll fd structure
 	
 	// initialise the dbus errors
 	dbus_error_init(&err);
