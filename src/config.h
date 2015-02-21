@@ -73,7 +73,8 @@ static Battery bat[] = {
 };
 
 // Battery fill area, start counting pixels from upper left as 0,0
-// Format is x, y, width, height
+// Format is x, y, width, height.  Use this to define the hollow area
+// of the icon below.
 static const XRectangle battery_fill_rect = {3, 2, 7, 10};
 
 // 13x13 battery (hollow) icon
