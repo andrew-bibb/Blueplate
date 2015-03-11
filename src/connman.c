@@ -111,7 +111,7 @@ static int xlib_init() {
 	XSetWindowAttributes wa;
 	wa.backing_store = Always;
 	wa.background_pixel = background;
-	wa.event_mask = StructureNotifyMask | ExposureMask;
+	wa.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask;
 	bars = XCreateWindow(dpy, root, 0, 0, 22, 22, 0, DefaultDepth(dpy,scr),
 			InputOutput, DefaultVisual(dpy, scr),
 			CWBackPixel | CWBackingStore | CWEventMask, &wa);
@@ -134,7 +134,7 @@ static int xlib_init() {
 	val.foreground = conn_online;
 	gc_online = XCreateGC(dpy, bars, GCForeground | GCBackground, &val);	
 	
-	XSelectInput (dpy, bars, ExposureMask | ButtonPressMask); 
+	XSelectInput (dpy, root, PropertyChangeMask);
 }
 
 // DBus watch functions
@@ -305,7 +305,6 @@ void getState()
 int connman() {
 	xlib_init();
 	XEvent ev;
-	embed_window(bars);
 	fd_set fds;
 	int xfd = ConnectionNumber(dpy);	// file descriptor for xlib
 	struct pollfd pfd[2];						// poll fd structure
@@ -353,9 +352,10 @@ int connman() {
 	getState();	
 		
 	// Main loop
+	embed_window(bars);
+	redraw();
 	while (running && poll(pfd, sizeof(pfd) / sizeof(pfd[0]), -1) ) {
 		redraw();
-		
 		// if dbus watch needs attention
 		if (pfd[1].revents & POLLIN) {
 			dbus_watch_handle(w, DBUS_WATCH_READABLE);
@@ -366,8 +366,9 @@ int connman() {
 		// if xevents need attention
 		if (pfd[0].revents & POLLIN) while (XPending(dpy)) {
 			XNextEvent(dpy, &ev);
+			if (ev.xany.window == bars && ev.type == UnmapNotify) embed_window(bars);
 			// left button open connman_click[0], any other button close
-			if (ev.type == ButtonPress) {
+			else if (ev.type == ButtonPress) {
 				XButtonEvent* xbv = (XButtonEvent*) &ev;
 				if (xbv->button == 1 && connman_click[0]) {
 					pid_t pid1;
@@ -379,10 +380,9 @@ int connman() {
 					}	// else we could fork
 				}	// if button 1
 				else running = FALSE;
-			}	// if button press			
-		}	// if xfd
-	}	// whle running
-	
+			}	// if button press	
+		}	// while xpending
+	}	// while running
 	xlib_free();
 	return 0;
 }
