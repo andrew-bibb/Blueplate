@@ -399,7 +399,7 @@ int battery() {
 					int i;
 					for (i = 0; i < sizeof(bat)/sizeof(bat[0]); ++i) {
 						if (xbv->window == bat[i].win ) {
-							if (xbv->button == 1 && connman_click[0])
+							if (xbv->button == 1])
 								bat[i].health = (bat[i].health == Health_No ? Health_Yes : Health_No);
 							else	
 								batterystatusid = i;
