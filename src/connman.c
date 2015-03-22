@@ -308,6 +308,7 @@ int connman() {
 	fd_set fds;
 	int xfd = ConnectionNumber(dpy);	// file descriptor for xlib
 	struct pollfd pfd[2];						// poll fd structure
+	const uint statemask = (1 << 2);	// (shift << 0, ctrl << 2, alt << 3)  
 	
 	// initialise the dbus errors
 	dbus_error_init(&err);
@@ -367,22 +368,28 @@ int connman() {
 		if (pfd[0].revents & POLLIN) while (XPending(dpy)) {
 			XNextEvent(dpy, &ev);
 			if (ev.xany.window == bars && ev.type == UnmapNotify) embed_window(bars);
-			// left button open connman_click[0], any other button close
+			// process button press
 			else if (ev.type == ButtonPress) {
 				XButtonEvent* xbv = (XButtonEvent*) &ev;
-				if (xbv->button == 1 && connman_click[0]) {
-					pid_t pid1;
-					if ( (pid1 = fork()) < 0 )
-						fprintf (stderr, "Couldn't fork the a child process to execute %s\n", connman_click[0]);
-					else {
-						if (pid1 == 0)
-							execvp(connman_click[0], (char * const *) connman_click);
-					}	// else we could fork
-				}	// if button 1
-				else running = FALSE;
-			}	// if button press	
+				
+				if (xbv->button == 1 && (xbv->state & statemask) )
+					running = FALSE;
+				
+				else if (xbv->button == 1 ) {
+					if (connman_click[0]) {
+						pid_t pid1;
+						if ( (pid1 = fork()) < 0 )
+							fprintf (stderr, "Couldn't fork the a child process to execute %s\n", connman_click[0]);
+						else {
+							if (pid1 == 0)
+								execvp(connman_click[0], (char * const *) connman_click);
+						}	// else we could fork
+					}	// else if connman_click[0]
+				}	// if button 1 pressed
+				 
+			}	// else if button press	
 		}	// while xpending
-		
+	
 		redraw();
 	}	// while running
 	xlib_free();
