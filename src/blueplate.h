@@ -12,6 +12,8 @@
 #include <signal.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define INOTIFY_FLAGS IN_CREATE | IN_DELETE | IN_MODIFY | IN_CLOSE_WRITE | IN_MOVE
 

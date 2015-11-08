@@ -65,7 +65,7 @@ void sighandler(int sig) {
 			pid_t pid;
 			int status;
 			
-			pid = waitpid(-1, &status, NULL);
+			pid = waitpid(-1, &status, 0);
 			break;
 		}	
 		default: 
