@@ -230,13 +230,13 @@ static int rescan() {
 	for (i = 0; i < sizeof(bat)/sizeof(bat[0]); ++i) {	
 		batt = 0;
 		int e_state = Discharging;
-		float e_design = 0.0;
-		float e_full = 0.0;
-		float e_now = 0.0;
+		double e_design = 0.0;
+		double e_full = 0.0;
+		double e_now = 0.0;
 		const char* pchar;
 	
 		// Match batteries in device list with icons
-		if (i < n_bat) {	
+		if (i < n_bat) {
 			udev_list_entry_foreach(dev_list_entry, devices) {
 				int j = 0;
 				const char* path;
@@ -244,21 +244,21 @@ static int rescan() {
 				dev = udev_device_new_from_syspath(udev, path);
 				if (strncmp (udev_device_get_sysname(dev), "BAT", 3) == 0 && i == j) {
 					// read the values
-					e_design = atof(udev_device_get_sysattr_value(dev, "energy_full_design"));
-					e_full = atof(udev_device_get_sysattr_value(dev, "energy_full"));
-					e_now = atof(udev_device_get_sysattr_value(dev, "energy_now"));
+					e_design = atof(udev_device_get_sysattr_value(dev, "charge_full_design"));
+					e_full = atof(udev_device_get_sysattr_value(dev, "charge_full"));
+					e_now = atof(udev_device_get_sysattr_value(dev, "charge_now"));
 					pchar = udev_device_get_sysattr_value(dev, "status");
 					if (strncmp (pchar, "Charging", 8) == 0 ) e_state = Charging;
 					else if (strncmp (pchar, "Full", 4) == 0) e_state = Full;
 					++j;
 					if (e_design == 0.0) fprintf(stderr, "Error: could not determine the design capacity of battery %i\n", i);
 					else if (e_full == 0.0 ) fprintf(stderr, "Error: could not determine the full capacity of battery %i\n", i);
-					else batt = 1;
+					else batt = 1;		
 				}	//	if BAT && i == j 
 			udev_device_unref(dev);
 			}	// foreach dev_list_entry in devices
 		}	// if (j < n_bat)
-							
+						
 		// prepare the icons				
 		if (batt) {
 			show |= (1<<i);			
@@ -313,6 +313,7 @@ static int rescan() {
 		}	// if batt
 		
 		else show &= ~(1<<i);
+		
 	}	// for each icon
 		
 	// correct window mappings based on number of icons to show
@@ -350,7 +351,7 @@ int battery() {
 		fprintf(stderr, "Error Connecting to DBus (%s)\n", err.message);
 		dbus_error_free(&err);
 	}
-	
+
 	// Initialize xlib
 	xlib_init();
 	XEvent ev;
@@ -359,7 +360,7 @@ int battery() {
 	// Create a udev object 
 	udev = udev_new();
 	if (!udev) {
-		printf("Can't create udev object in main\n");
+		fprintf(stderr, "Can't create udev object in main\n");
 		xlib_free();
 		exit(1);
 	}
@@ -372,7 +373,7 @@ int battery() {
 	
 	// Find batteries and get the data about each
 	rescan();
-		
+			
 	// Poll structures 
 	pfd[0].fd = mfd;
 	pfd[0].events = POLLIN;
